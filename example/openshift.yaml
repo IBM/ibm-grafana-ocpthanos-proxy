@@ -1,0 +1,105 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: thanos-proxy-ns-config
+  namespace: ibm-common-services
+data:
+  ns-config.yaml: |
+    type: ibm-bedrock-iam
+    paras:
+      uidURL: https://platform-identity-provider.ibm-common-services.svc:4300
+      userInfoURL: https://platform-identity-management.ibm-common-services.svc:4500
+    #### use config below if no ibm bedrock services 
+    # type: ns-list
+    # paras:
+    #   namespaces:
+    #   # - "ALL"
+    #   - "ibm-common-services"
+    #   - "openshift-monitoring"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-proxy
+  namespace: ibm-common-services
+spec:
+  ports:
+  - name: thanos-proxy
+    port: 9096
+    protocol: TCP
+    targetPort: 9096
+  selector:
+    name: thanos-proxy
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thanos-proxy
+  namespace: ibm-common-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: thanos-proxy
+  template:
+    metadata:
+      labels:
+        name: thanos-proxy
+    spec:
+      serviceAccountName: thanos-proxy
+      containers:
+        - name: thanos-proxy
+          image: quay.io/dybo/grafana-ocpthanos-proxy-amd64:v20200717-22d8ac4
+          command:
+          - grafana-ocpthanos-proxy
+          - --listen-address=0.0.0.0:9096
+          imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: /etc/conf
+            name: ns-config
+      volumes:
+      - configMap:
+          defaultMode: 444
+          name: thanos-proxy-ns-config
+          items:
+          - key: ns-config.yaml
+            path: ns-config.yaml
+        name: ns-config
+
+####################################### RBAC ##############################################
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: ibm-common-services
+  name: thanos-proxy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: thanos-proxy-role
+  creationTimestamp: null
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  - namespaces
+  verbs:
+  - list
+  - get
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: thanos-proxy-rb
+subjects:
+- kind: ServiceAccount
+  name: thanos-proxy
+  namespace: ibm-common-services
+roleRef:
+  kind: ClusterRole
+  name: thanos-proxy-role
+  apiGroup: rbac.authorization.k8s.io

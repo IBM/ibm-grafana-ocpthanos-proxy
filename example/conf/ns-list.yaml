@@ -1,0 +1,6 @@
+type: ns-list
+paras:
+  namespaces:
+  # - "ALL"
+  - "ibm-common-services"
+  - "openshift-monitoring"
