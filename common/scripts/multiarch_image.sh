@@ -23,8 +23,10 @@ ALL_PLATFORMS="amd64 ppc64le s390x"
 
 IMAGE_REPO=${1}
 IMAGE_NAME=${2}
-VERSION=${3-"$(date +v%Y%m%d)-$(git describe --tags --always --dirty)"}
+VERSION=${3}
 
+## Enable experimental cli
+export DOCKER_CLI_EXPERIMENTAL=enabled
 # support other container tools, e.g. podman
 CONTAINER_CLI=${CONTAINER_CLI:-docker}
 

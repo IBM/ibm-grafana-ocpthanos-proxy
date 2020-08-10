@@ -1,3 +1,4 @@
+#
 # Copyright 2020 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,17 @@
 # limitations under the License.
 #
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.2-267
+FROM alpine as builder
+
+RUN wget -O /qemu-ppc64le-static https://github.com/multiarch/qemu-user-static/releases/latest/download/qemu-ppc64le-static
+
+RUN chmod +x /qemu-ppc64le-static
+
+#Using sha to reference image so that we get the actual architecture image since this build occurrs
+#on amd and using the fat manifest only pulls amd
+#FROM registry.access.redhat.com/ubi8/ubi-minimal:8.1-398
+FROM registry.access.redhat.com/ubi8/ubi-minimal@sha256:7e432c89f285392c7d09343a3100e97158121bd5f73b89c852eba9609e19f9f4
+
 ARG VCS_REF
 ARG VCS_URL
 
@@ -33,8 +44,10 @@ ENV BINARY=/usr/local/bin/grafana-ocpthanos-proxy \
   USER_UID=66666 \
   USER_NAME=ocpthanos-proxy
 
+COPY --from=builder /qemu-ppc64le-static /usr/bin/
+
 # install the binary
-COPY build/_output/bin/grafana-ocpthanos-proxy-amd64 ${BINARY}
+COPY build/_output/bin/grafana-ocpthanos-proxy-ppc64le ${BINARY}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup
