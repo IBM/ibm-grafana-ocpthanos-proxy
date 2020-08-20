@@ -26,7 +26,13 @@ import (
 )
 
 //StartAndServe start HTTP server and forward request to backend server
-func StartAndServe(listenAddr string, urlPrefix string, thanosAddr string, thanosTokenFile string, nsparser nsparser.NSParser, nsLabelName string, errCh chan<- error) (*http.Server, error) {
+func StartAndServe(listenAddr string,
+	urlPrefix string,
+	thanosAddr string,
+	thanosTokenFile string,
+	nsparser nsparser.NSParser,
+	nsLabelName string,
+	errCh chan<- error) (*http.Server, error) {
 	url, err := url.Parse(thanosAddr)
 	if err != nil {
 		return nil, err

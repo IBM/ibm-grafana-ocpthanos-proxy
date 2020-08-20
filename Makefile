@@ -21,7 +21,7 @@ BUILD_LOCALLY ?= 1
 # Image URL to use all building/pushing image targets;
 # Use your own docker registry and image name for dev/test by overridding the
 # IMAGE_REPO, IMAGE_NAME and RELEASE_TAG environment variable.
-IMAGE_REPO ?= quay.io/dybo
+IMAGE_REPO ?= "hyc-cloud-private-integration-docker-local.artifactory.swg-devops.com/ibmcom"
 IMAGE_NAME ?= grafana-ocpthanos-proxy
 
 # Github host to use for checking the source tree;
@@ -39,7 +39,7 @@ export GOBIN ?= $(GOBIN_DEFAULT)
 TESTARGS_DEFAULT := "-v"
 export TESTARGS ?= $(TESTARGS_DEFAULT)
 DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
-VERSION ?= $(shell date +v%Y%m%d)-$(shell git describe --match=$(git rev-parse --short=8 HEAD) --tags --always --dirty)
+VERSION ?= $(shell cat ./version/version.go | grep "Version =" | awk '{ print $$3}' | tr -d '"')
 
 LOCAL_OS := $(shell uname)
 ifeq ($(LOCAL_OS),Linux)
@@ -63,6 +63,17 @@ else ifeq ($(ARCH),s390x)
 else
     $(error "This system's ARCH $(ARCH) isn't recognized/supported")
 endif
+
+$(eval WORKING_CHANGES := $(shell git status --porcelain))
+$(eval BUILD_DATE := $(shell date +%m/%d@%H:%M:%S))
+$(eval GIT_COMMIT := $(shell git rev-parse --short HEAD))
+$(eval VCS_REF := $(GIT_COMMIT))
+IMAGE_RELEASE=$(VCS_REF)
+GIT_REMOTE_URL = $(shell git config --get remote.origin.url)
+$(eval DOCKER_BUILD_OPTS := --build-arg "IMAGE_NAME=$(IMAGE_NAME)" --build-arg "IMAGE_DISPLAY_NAME=$(IMAGE_DISPLAY_NAME)" --build-arg "IMAGE_MAINTAINER=$(IMAGE_MAINTAINER)" --build-arg "IMAGE_VENDOR=$(IMAGE_VENDOR)" --build-arg "IMAGE_VERSION=$(IMAGE_VERSION)" --build-arg "IMAGE_RELEASE=$(IMAGE_RELEASE)" --build-arg "IMAGE_DESCRIPTION=$(IMAGE_DESCRIPTION)" --build-arg "IMAGE_SUMMARY=$(IMAGE_SUMMARY)" --build-arg "IMAGE_OPENSHIFT_TAGS=$(IMAGE_OPENSHIFT_TAGS)" --build-arg "VCS_REF=$(VCS_REF)" --build-arg "VCS_URL=$(GIT_REMOTE_URL)" --build-arg "SELF_METER_IMAGE_TAG=$(SELF_METER_IMAGE_TAG)")
+
+#####
+MARKDOWN_LINT_WHITELIST="http://thanos-proxy:9096,https://thanos-querier.openshift-monitoring.svc:9091"
 
 all: fmt check test coverage build images
 
@@ -123,10 +134,19 @@ coverage:
 # build section
 ############################################################
 
-build:
-	@echo "Building the $(IMAGE_NAME) binary for $(LOCAL_ARCH)..."
-	@GOARCH=$(LOCAL_ARCH) common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME) ./cmd
+build: build-amd64 build-ppc64le build-s390x
 
+build-amd64:
+	@echo "Building the $(IMAGE_NAME) amd64 binary..."
+	@GOARCH=$(LOCAL_ARCH) common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-amd64 ./cmd
+
+build-ppc64le:
+	@echo "Building the ${IMAGE_NAME} ppc64le binary..."
+	@GOARCH=ppc64le common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-ppc64le ./cmd
+
+build-s390x:
+	@echo "Building the ${IMAGE_NAME} s390x binary..."
+	@GOARCH=s390x common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-s390x ./cmd
 ############################################################
 # image section
 ############################################################
@@ -135,16 +155,40 @@ ifeq ($(BUILD_LOCALLY),0)
     export CONFIG_DOCKER_TARGET = config-docker
 endif
 
-build-push-image: build-image push-image
+build-push-image: build-images push-images
 
-build-image: build
-	@echo "Building the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)..."
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION) -f build/Dockerfile .
+build-images: build-image-amd64 build-image-ppc64le build-image-s390x
 
-push-image: $(CONFIG_DOCKER_TARGET) build-image
-	@echo "Pushing the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)..."
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION)
+build-image-amd64: build-amd64
+	@echo "Building the $(IMAGE_NAME) docker image for amd64..."
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-amd64" -f build/Dockerfile .
 
+build-image-ppc64le: build-ppc64le
+	@echo "Building the $(IMAGE_NAME) docker image for ppc64le ..."
+	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-ppc64le" -f build/Dockerfile.ppc64le .
+
+build-image-s390x: build-s390x
+	@echo "Building the $(IMAGE_NAME) docker image for s390x ..."
+	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-s390x" -f build/Dockerfile.s390x .
+
+
+push-images: push-image-amd64 push-image-ppc64le push-image-s390x multiarch-image
+
+push-image-amd64: $(CONFIG_DOCKER_TARGET) build-image-amd64
+	@echo "Pushing the $(IMAGE_NAME) docker image for amd64..."
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION)
+
+push-image-ppc64le: $(CONFIG_DOCKER_TARGET) build-image-ppc64le
+	@echo "Pushing the $(IMAGE_NAME) docker image for ppc64le..."
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION)
+
+push-image-s390x: $(CONFIG_DOCKER_TARGET) build-image-s390x
+	@echo "Push the $(IMAGE_NAME) docker image for s390x..."
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION)
+
+images: push-images
 ############################################################
 # multiarch-image section
 ############################################################

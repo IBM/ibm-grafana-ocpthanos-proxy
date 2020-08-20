@@ -29,7 +29,7 @@ import (
 )
 
 /**********************************************
-***** NSParser implementation: type definations
+***** NSParser implementation: type definitions
 ***********************************************/
 type ibmBedrockNSParser struct {
 	uidURL      string
@@ -86,6 +86,9 @@ func (p *ibmBedrockNSParser) getUserID(token string) (string, error) {
 		targetURL,
 		formBody)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if err != nil {
+		return "", err
+	}
 
 	var resp *http.Response
 	if resp, err = p.client.Do(req); err != nil {
@@ -109,7 +112,7 @@ func (p *ibmBedrockNSParser) getUserID(token string) (string, error) {
 
 	return respObj["sub"].(string), nil
 }
-func (p *ibmBedrockNSParser) queryUserInfo(url string, token string, uid string) (string, error) {
+func (p *ibmBedrockNSParser) queryUserInfo(url string, token string) (string, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
@@ -132,12 +135,14 @@ func (p *ibmBedrockNSParser) queryUserInfo(url string, token string, uid string)
 func (p *ibmBedrockNSParser) getUserNamespaces(token string, uid string) ([]string, error) {
 	//get namespaces accessible to the user
 	nsURL := p.userInfoURL + "/identity/api/v1/users/" + uid + "/getTeamResources" + "?resourceType=namespace"
-	nsRawString, err := p.queryUserInfo(nsURL, token, uid)
+	nsRawString, err := p.queryUserInfo(nsURL, token)
 	if err != nil {
-		return []string{}, fmt.Errorf("failed to get namespaces accessible to user. detials: " + err.Error())
+		return []string{}, fmt.Errorf("failed to get namespaces accessible to user. details: " + err.Error())
 	}
 	var nsObj []map[string]string
-	json.Unmarshal([]byte(nsRawString), &nsObj)
+	if err := json.Unmarshal([]byte(nsRawString), &nsObj); err != nil {
+		return []string{}, fmt.Errorf("failed to parse bedrock IAM service response")
+	}
 	var namespaces []string
 	for _, ns := range nsObj {
 		namespaces = append(namespaces, ns["namespaceId"])
@@ -180,6 +185,7 @@ func (p *ibmBedrockNSParser) init() {
 	}
 	// create Client. it is http.DefaultTransport with extra tls Config
 	tlsConfig := &tls.Config{
+		//nolint:gosec
 		InsecureSkipVerify: true,
 	}
 	transport := &http.Transport{
