@@ -43,11 +43,16 @@ func main() {
 	flagset.StringVar(&cfg.listeningAddr, "listen-address", "127.0.0.1:9096", "The address ibm-grafana-ocpthanos-proxy should listen on.")
 	flagset.StringVar(&cfg.urlPrefix, "url-prefix", "/", "url prefix of the proxy")
 	flagset.StringVar(&cfg.thanosAddr, "thanos-address", "https://thanos-querier.openshift-monitoring.svc:9091", "The address of thanos-querier service")
-	flagset.StringVar(&cfg.nsParserConf, "ns-parser-conf", "/etc/conf/ns-config.yaml", "NSParser configurate file location")
-	flagset.StringVar(&cfg.thanosTokenFile, "thanos-token-file", "/var/run/secrets/kubernetes.io/serviceaccount/token", "The token file passed to OCP thanos-querier service for authentication")
+	flagset.StringVar(&cfg.nsParserConf, "ns-parser-conf", "/etc/conf/ns-config.yaml", "NSParser configuration file location")
+	flagset.StringVar(&cfg.thanosTokenFile,
+		"thanos-token-file",
+		"/var/run/secrets/kubernetes.io/serviceaccount/token",
+		"The token file passed to OCP thanos-querier service for authentication")
 	flagset.StringVar(&cfg.nsLabelName, "ns-label-name", "namespace", "The name of metrics' namespace label")
 
-	flagset.Parse(os.Args[1:])
+	if err := flagset.Parse(os.Args[1:]); err != nil {
+		log.Fatal(err)
+	}
 
 	nsparser := nsparser.NewNSParser(cfg.nsParserConf)
 	if nsparser == nil {

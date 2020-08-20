@@ -26,8 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/ibm-grafana-ocpthanos-proxy/pkg/nsparser"
 	promparser "github.com/prometheus/prometheus/promql/parser"
+
+	"github.com/IBM/ibm-grafana-ocpthanos-proxy/pkg/nsparser"
 )
 
 type routes struct {
@@ -57,6 +58,7 @@ func (r *routes) init() {
 	// it is http.DefaultTransport with extra tls Config
 	if r.thanosURL.Scheme == "https" {
 		tlsConfig := &tls.Config{
+			//nolint:gosec
 			InsecureSkipVerify: true,
 		}
 		transport := &http.Transport{
@@ -96,7 +98,6 @@ func (r *routes) init() {
 		//add Authorization heander for token
 		tokenBytes, err := ioutil.ReadFile(r.thanosTokenFile)
 		if err != nil {
-			//http.Error(w, "no token configured for proxy", http.StatusForbidden)
 			tokenBytes = []byte("")
 		}
 		thanosToken := string(tokenBytes)
@@ -119,12 +120,12 @@ func (r *routes) init() {
 func (r *routes) query(w http.ResponseWriter, req *http.Request) {
 	namespaces, err := r.nsparser.ParseNamespaces(req)
 	if err != nil {
-		http.Error(w, "No namespace accessbile for user. details: "+err.Error(), http.StatusForbidden)
+		http.Error(w, "No namespace accessible for user. details: "+err.Error(), http.StatusForbidden)
 		return
 
 	}
 	if len(namespaces) == 0 {
-		http.Error(w, "No namespace accessbile for user.", http.StatusForbidden)
+		http.Error(w, "No namespace accessible for user.", http.StatusForbidden)
 		return
 	}
 	for _, ns := range namespaces {

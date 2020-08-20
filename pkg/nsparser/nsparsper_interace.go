@@ -24,14 +24,14 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-//NSParserType defines type of namespace parser
-type NSParserType string
+//Type defines type of namespace parser
+type Type string
 
 //NSParserTypeBedrock this namespace parser gets namespaces by querying IBM Bedrock IAM service
-const NSParserTypeBedrock NSParserType = "ibm-bedrock-iam"
+const NSParserTypeBedrock Type = "ibm-bedrock-iam"
 
 //NSParserTypeNSList use this kind of namespace parser, user can configure namespace list in configuration file
-const NSParserTypeNSList NSParserType = "ns-list"
+const NSParserTypeNSList Type = "ns-list"
 
 //AllNamespaces means user can access all namespaces
 const AllNamespaces = "ALL"
@@ -51,8 +51,8 @@ type NSParser interface {
 func NewNSParser(cfgFile string) NSParser {
 	b, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
-		log.Fatalf("failed to parse namespace parser configuration file: " + cfgFile)
-		log.Printf(err.Error())
+		log.Fatal("failed to parse namespace parser configuration file: " + cfgFile)
+		log.Print(err.Error())
 		return nil
 	}
 	var cfg map[string]interface{}
@@ -65,7 +65,7 @@ func NewNSParser(cfgFile string) NSParser {
 		log.Fatalf("something is wrong in namespace parser configuration file: " + cfgFile)
 		return nil
 	}
-	switch NSParserType(ptype.(string)) {
+	switch Type(ptype.(string)) {
 	case NSParserTypeBedrock:
 		paras, ok := cfg["paras"].(map[string]interface{})
 		if !ok {
