@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 # This script build and push multiarch(amd64, ppc64le and s390x) image for the one specified by
 # IMAGE_REPO, IMAGE_NAME and VERSION.
 # It assumes the specified image for each platform is already pushed into corresponding docker registry.
