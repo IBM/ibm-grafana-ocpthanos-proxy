@@ -29,7 +29,7 @@ ARG IMAGE_OPENSHIFT_TAGS
 ARG VCS_REF
 ARG VCS_URL
 
-LABEL org.label-schema.vendor=IMAGE_VENDOR \
+LABEL org.label-schema.vendor=$IMAGE_VENDOR \
   org.label-schema.name=$IMAGE_NAME_ARCH \
   org.label-schema.description=$IMAGE_DESCRIPTION \
   org.label-schema.vcs-ref=$VCS_REF \

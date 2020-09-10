@@ -147,11 +147,11 @@ build-image: build
 	@echo "Building the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)"
 	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-amd64" -f Dockerfile .
 
-push-image: $(CONFIG_DOCKER_TARGET) build-image
+build-push-image: $(CONFIG_DOCKER_TARGET) build-image
 	@echo "Pushing the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)"
 	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION)
 
-images: push-image multiarch-image
+images: build-push-image multiarch-image
 
 ############################################################
 # multiarch-image section
@@ -160,10 +160,4 @@ images: push-image multiarch-image
 multiarch-image: $(CONFIG_DOCKER_TARGET)
 	@common/scripts/multiarch_image.sh $(IMAGE_REPO) $(IMAGE_NAME) $(VERSION)
 
-############################################################
-# clean section
-############################################################
-clean:
-	@rm -rf build/_output
-
-.PHONY: all work fmt check coverage lint test build images push-image multiarch-image clean
+.PHONY: all work fmt check coverage lint test build images build-push-image multiarch-image
