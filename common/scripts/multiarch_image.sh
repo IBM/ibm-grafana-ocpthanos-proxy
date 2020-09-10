@@ -17,6 +17,7 @@
 # This script build and push multiarch(amd64, ppc64le and s390x) image for the one specified by
 # IMAGE_REPO, IMAGE_NAME and VERSION.
 # It assumes the specified image for each platform is already pushed into corresponding docker registry.
+set -x
 
 ALL_PLATFORMS="amd64 ppc64le s390x"
 
@@ -24,8 +25,6 @@ IMAGE_REPO=${1}
 IMAGE_NAME=${2}
 VERSION=${3}
 
-## Enable experimental cli
-export DOCKER_CLI_EXPERIMENTAL=enabled
 # support other container tools, e.g. podman
 CONTAINER_CLI=${CONTAINER_CLI:-docker}
 
@@ -39,7 +38,7 @@ do
     for i in $(seq 1 "${MAX_PULLING_RETRY}")
     do
         echo "Trying to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'..."
-        ${CONTAINER_CLI} pull "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${VERSION}" && break
+        ${CONTAINER_CLI} manifest inspect "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${VERSION}" && break
         sleep "${RETRY_INTERVAL}"
         if [ "${i}" -eq "${MAX_PULLING_RETRY}" ]; then
             echo "Failed to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'!!!"
