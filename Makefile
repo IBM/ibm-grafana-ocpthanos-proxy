@@ -34,8 +34,6 @@ BASE_DIR := $(shell basename $(PWD))
 # Keep an existing GOPATH, make a private one if it is undefined
 GOPATH_DEFAULT := $(PWD)/.go
 export GOPATH ?= $(GOPATH_DEFAULT)
-GOBIN_DEFAULT := $(GOPATH)/bin
-export GOBIN ?= $(GOBIN_DEFAULT)
 TESTARGS_DEFAULT := "-v"
 export TESTARGS ?= $(TESTARGS_DEFAULT)
 DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
@@ -94,15 +92,6 @@ endif
 include common/Makefile.common.mk
 
 ############################################################
-# work section
-############################################################
-$(GOBIN):
-	@echo "create gobin"
-	@mkdir -p $(GOBIN)
-
-work: $(GOBIN)
-
-############################################################
 # format section
 ############################################################
 
@@ -142,19 +131,10 @@ coverage:
 # build section
 ############################################################
 
-build: build-amd64 build-ppc64le build-s390x
+build:
+	@echo "Building the $(IMAGE_NAME) $(LOCAL_ARCH) binary..."
+	@GOARCH=$(LOCAL_ARCH) common/scripts/gobuild.sh $(IMAGE_NAME) ./cmd
 
-build-amd64:
-	@echo "Building the $(IMAGE_NAME) amd64 binary..."
-	@GOARCH=$(LOCAL_ARCH) common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-amd64 ./cmd
-
-build-ppc64le:
-	@echo "Building the ${IMAGE_NAME} ppc64le binary..."
-	@GOARCH=ppc64le common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-ppc64le ./cmd
-
-build-s390x:
-	@echo "Building the ${IMAGE_NAME} s390x binary..."
-	@GOARCH=s390x common/scripts/gobuild.sh build/_output/bin/$(IMAGE_NAME)-s390x ./cmd
 ############################################################
 # image section
 ############################################################
@@ -163,40 +143,16 @@ ifeq ($(BUILD_LOCALLY),0)
     export CONFIG_DOCKER_TARGET = config-docker
 endif
 
-build-push-image: build-images push-images
+build-image: build
+	@echo "Building the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)"
+	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-amd64" -f Dockerfile .
 
-build-images: build-image-amd64 build-image-ppc64le build-image-s390x
+push-image: $(CONFIG_DOCKER_TARGET) build-image
+	@echo "Pushing the $(IMAGE_NAME) docker image for $(LOCAL_ARCH)"
+	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-$(LOCAL_ARCH):$(VERSION)
 
-build-image-amd64: build-amd64
-	@echo "Building the $(IMAGE_NAME) docker image for amd64..."
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-amd64" -f build/Dockerfile .
+images: push-image multiarch-image
 
-build-image-ppc64le: build-ppc64le
-	@echo "Building the $(IMAGE_NAME) docker image for ppc64le ..."
-	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-ppc64le" -f build/Dockerfile.ppc64le .
-
-build-image-s390x: build-s390x
-	@echo "Building the $(IMAGE_NAME) docker image for s390x ..."
-	@docker run --rm --privileged multiarch/qemu-user-static:register --reset
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION) $(DOCKER_BUILD_OPTS) --build-arg "IMAGE_NAME_ARCH=$(IMAGE_NAME)-s390x" -f build/Dockerfile.s390x .
-
-
-push-images: push-image-amd64 push-image-ppc64le push-image-s390x multiarch-image
-
-push-image-amd64: $(CONFIG_DOCKER_TARGET) build-image-amd64
-	@echo "Pushing the $(IMAGE_NAME) docker image for amd64..."
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-amd64:$(VERSION)
-
-push-image-ppc64le: $(CONFIG_DOCKER_TARGET) build-image-ppc64le
-	@echo "Pushing the $(IMAGE_NAME) docker image for ppc64le..."
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-ppc64le:$(VERSION)
-
-push-image-s390x: $(CONFIG_DOCKER_TARGET) build-image-s390x
-	@echo "Push the $(IMAGE_NAME) docker image for s390x..."
-	@docker push $(IMAGE_REPO)/$(IMAGE_NAME)-s390x:$(VERSION)
-
-images: push-images
 ############################################################
 # multiarch-image section
 ############################################################
@@ -210,4 +166,4 @@ multiarch-image: $(CONFIG_DOCKER_TARGET)
 clean:
 	@rm -rf build/_output
 
-.PHONY: all work fmt check coverage lint test build build-push-image multiarch-image clean
+.PHONY: all work fmt check coverage lint test build images push-image multiarch-image clean
