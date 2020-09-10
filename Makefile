@@ -64,13 +64,21 @@ else
     $(error "This system's ARCH $(ARCH) isn't recognized/supported")
 endif
 
+## Setup docker image build options
+IMAGE_DISPLAY_NAME=IBM Grafana Thanos Proxy
+IMAGE_MAINTAINER=dybo@cn.ibm.com
+IMAGE_VENDOR=IBM
+IMAGE_VERSION=$(VERSION)
+IMAGE_DESCRIPTION=A simple proxy between Grafana and OCP thanos-querier service
+IMAGE_SUMMARY=$(IMAGE_DESCRIPTION)
+IMAGE_OPENSHIFT_TAGS=monitoring
 $(eval WORKING_CHANGES := $(shell git status --porcelain))
 $(eval BUILD_DATE := $(shell date +%m/%d@%H:%M:%S))
 $(eval GIT_COMMIT := $(shell git rev-parse --short HEAD))
 $(eval VCS_REF := $(GIT_COMMIT))
-IMAGE_RELEASE=$(VCS_REF)
+IMAGE_RELEASE=$(VERSION)
 GIT_REMOTE_URL = $(shell git config --get remote.origin.url)
-$(eval DOCKER_BUILD_OPTS := --build-arg "IMAGE_NAME=$(IMAGE_NAME)" --build-arg "IMAGE_DISPLAY_NAME=$(IMAGE_DISPLAY_NAME)" --build-arg "IMAGE_MAINTAINER=$(IMAGE_MAINTAINER)" --build-arg "IMAGE_VENDOR=$(IMAGE_VENDOR)" --build-arg "IMAGE_VERSION=$(IMAGE_VERSION)" --build-arg "IMAGE_RELEASE=$(IMAGE_RELEASE)" --build-arg "IMAGE_DESCRIPTION=$(IMAGE_DESCRIPTION)" --build-arg "IMAGE_SUMMARY=$(IMAGE_SUMMARY)" --build-arg "IMAGE_OPENSHIFT_TAGS=$(IMAGE_OPENSHIFT_TAGS)" --build-arg "VCS_REF=$(VCS_REF)" --build-arg "VCS_URL=$(GIT_REMOTE_URL)" --build-arg "SELF_METER_IMAGE_TAG=$(SELF_METER_IMAGE_TAG)")
+$(eval DOCKER_BUILD_OPTS := --build-arg "IMAGE_NAME=$(IMAGE_NAME)" --build-arg "IMAGE_DISPLAY_NAME=$(IMAGE_DISPLAY_NAME)" --build-arg "IMAGE_MAINTAINER=$(IMAGE_MAINTAINER)" --build-arg "IMAGE_VENDOR=$(IMAGE_VENDOR)" --build-arg "IMAGE_VERSION=$(IMAGE_VERSION)" --build-arg "IMAGE_RELEASE=$(IMAGE_RELEASE)" --build-arg "IMAGE_DESCRIPTION=$(IMAGE_DESCRIPTION)" --build-arg "IMAGE_SUMMARY=$(IMAGE_SUMMARY)" --build-arg "IMAGE_OPENSHIFT_TAGS=$(IMAGE_OPENSHIFT_TAGS)" --build-arg "VCS_REF=$(VCS_REF)" --build-arg "VCS_URL=$(GIT_REMOTE_URL)")
 
 #####
 MARKDOWN_LINT_WHITELIST="http://thanos-proxy:9096,https://thanos-querier.openshift-monitoring.svc:9091"
