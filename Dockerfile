@@ -42,20 +42,11 @@ LABEL org.label-schema.vendor=IMAGE_VENDOR \
   maintainer=$IMAGE_MAINTAINER \
   summary=$IMAGE_DESCRIPTION
 
-ENV BINARY=/usr/local/bin/grafana-ocpthanos-proxy \
-  USER_UID=66666 \
-  USER_NAME=ocpthanos-proxy
-
-# install the binary
-COPY build/_output/bin/grafana-ocpthanos-proxy-amd64 ${BINARY}
-
-COPY build/bin /usr/local/bin
-RUN  /usr/local/bin/user_setup
+COPY grafana-ocpthanos-proxy /grafana-ocpthanos-proxy
 
 # copy licenses
 RUN mkdir /licenses
 COPY LICENSE /licenses
 
-ENTRYPOINT ["/usr/local/bin/entrypoint"]
-
-USER ${USER_UID}
+USER 66666
+ENTRYPOINT ["/grafana-ocpthanos-proxy"]
