@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-#registry.access.redhat.com/ubi8/ubi-minimal:8.2-345
-FROM registry.access.redhat.com/ubi8/ubi-minimal@sha256:372622021a90893d9e25c298e045c804388c7666f3e756cd48f75d20172d9e55
+#Always get the latest
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.2-349
 
 ARG IMAGE_NAME
 ARG IMAGE_DISPLAY_NAME
@@ -45,8 +45,8 @@ LABEL org.label-schema.vendor=$IMAGE_VENDOR \
 COPY grafana-ocpthanos-proxy /grafana-ocpthanos-proxy
 
 # copy licenses
-RUN mkdir /licenses
+RUN mkdir /licenses && microdnf update
 COPY LICENSE /licenses
 
-USER 66666
 ENTRYPOINT ["/grafana-ocpthanos-proxy"]
+USER 66666
