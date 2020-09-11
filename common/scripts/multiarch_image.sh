@@ -24,6 +24,7 @@ ALL_PLATFORMS="amd64 ppc64le s390x"
 IMAGE_REPO=${1}
 IMAGE_NAME=${2}
 VERSION=${3}
+GIT_COMMIT=${4}
 
 # support other container tools, e.g. podman
 CONTAINER_CLI=${CONTAINER_CLI:-docker}
@@ -37,11 +38,11 @@ for arch in ${ALL_PLATFORMS}
 do
     for i in $(seq 1 "${MAX_PULLING_RETRY}")
     do
-        echo "Trying to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'..."
-        ${CONTAINER_CLI} manifest inspect "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${VERSION}" && break
+        echo "Trying to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${GIT_COMMIT}'..."
+        ${CONTAINER_CLI} pull "${IMAGE_REPO}"/"${IMAGE_NAME}"-"${arch}":"${GIT_COMMIT}" && break
         sleep "${RETRY_INTERVAL}"
         if [ "${i}" -eq "${MAX_PULLING_RETRY}" ]; then
-            echo "Failed to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${VERSION}'!!!"
+            echo "Failed to pull image '${IMAGE_REPO}'/'${IMAGE_NAME}'-'${arch}':'${GIT_COMMIT}'!!!"
             exit 1
         fi
     done
@@ -50,14 +51,14 @@ done
 # create multi-arch manifest
 echo "Creating the multi-arch image manifest for '${IMAGE_REPO}'/'${IMAGE_NAME}':'${VERSION}'..."
 ${CONTAINER_CLI} manifest create "${IMAGE_REPO}"/"${IMAGE_NAME}":"${VERSION}" \
-    "${IMAGE_REPO}"/"${IMAGE_NAME}"-amd64:"${VERSION}" \
-    "${IMAGE_REPO}"/"${IMAGE_NAME}"-ppc64le:"${VERSION}" \
-    "${IMAGE_REPO}"/"${IMAGE_NAME}"-s390x:"${VERSION}"
+    "${IMAGE_REPO}"/"${IMAGE_NAME}"-amd64:"${GIT_COMMIT}" \
+    "${IMAGE_REPO}"/"${IMAGE_NAME}"-ppc64le:"${GIT_COMMIT}" \
+    "${IMAGE_REPO}"/"${IMAGE_NAME}"-s390x:"${GIT_COMMIT}"
 echo "Creating the multi-arch image manifest for '${IMAGE_REPO}'/'${IMAGE_NAME}':latest..."
 ${CONTAINER_CLI} manifest create "${IMAGE_REPO}"/"${IMAGE_NAME}":latest \
-    "${IMAGE_REPO}"/"${IMAGE_NAME}"-amd64:"${VERSION}" \
-    "${IMAGE_REPO}"/"${IMAGE_NAME}"-ppc64le:"${VERSION}" \
-    "${IMAGE_REPO}"/"${IMAGE_NAME}"-s390x:"${VERSION}"
+    "${IMAGE_REPO}"/"${IMAGE_NAME}"-amd64:"${GIT_COMMIT}" \
+    "${IMAGE_REPO}"/"${IMAGE_NAME}"-ppc64le:"${GIT_COMMIT}" \
+    "${IMAGE_REPO}"/"${IMAGE_NAME}"-s390x:"${GIT_COMMIT}"
 
 # push multi-arch manifest
 echo "Pushing the multi-arch image manifest for '${IMAGE_REPO}'/'${IMAGE_NAME}':'${VERSION}'..."
