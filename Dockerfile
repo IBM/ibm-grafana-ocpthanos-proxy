@@ -42,11 +42,11 @@ LABEL org.label-schema.vendor=$IMAGE_VENDOR \
   maintainer=$IMAGE_MAINTAINER \
   summary=$IMAGE_DESCRIPTION
 
-COPY grafana-ocpthanos-proxy /grafana-ocpthanos-proxy
+COPY grafana-ocpthanos-proxy /usr/local/bin/grafana-ocpthanos-proxy
 
 # copy licenses
 RUN mkdir /licenses && microdnf update
 COPY LICENSE /licenses
 
-ENTRYPOINT ["/grafana-ocpthanos-proxy"]
+ENTRYPOINT ["grafana-ocpthanos-proxy"]
 USER 66666
