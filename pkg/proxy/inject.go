@@ -146,6 +146,7 @@ func enforceLabelMatcher(matchers []*promlabels.Matcher, nsLabelname string, nam
 			for _, ns := range namespaces {
 				if ons == ns {
 					found = true
+					break
 				}
 			}
 			if !found {

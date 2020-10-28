@@ -6,11 +6,11 @@ metadata:
   namespace: ibm-common-services
 data:
   ns-config.yaml: |
-    type: ibm-bedrock-iam
+    type: ibm-cs-iam
     paras:
       uidURL: https://platform-identity-provider.ibm-common-services.svc:4300
       userInfoURL: https://platform-identity-management.ibm-common-services.svc:4500
-    #### use config below if no ibm bedrock services 
+    #### use config below if no ibm common services
     # type: ns-list
     # paras:
     #   namespaces:

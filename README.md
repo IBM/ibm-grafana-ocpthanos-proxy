@@ -26,14 +26,14 @@ However OCP does not provide Grafana atop of it. This project makes it much easi
 The example below can not be used in production environment. It production environment it should be used as sidecar of Grafana Pod and listen to loopback interface only.
 1. Enable OCP Application monitoring according to [OCP official document](https://docs.openshift.com/container-platform/4.3/monitoring/monitoring-your-own-services.html). If you just want to play with cluster metrics this step can be ignored.
 2. Set up this proxy as a standalone OCP service.
-   It can be done by `oc create -f example/openshift.yaml`. The default configuration assuming you have [IBM Bedrock Services](https://github.com/IBM/ibm-common-service-operator) installed and it uses its IAM service as namespace provider.
-   If you do not have IBM Bedrock Services installed, edit example/openshift.yaml to update its thanos-proxy-ns-config configmap to use another namespace provider.
-3. Install Grafana into your cluster. You can install it via [IBM Bedrock Grafana service](https://github.com/IBM/ibm-monitoring-grafana-operator) or the community Grafana operator from OCP OperatorHub.
+   It can be done by `oc create -f example/openshift.yaml`. The default configuration assuming you have [IBM Common Services](https://github.com/IBM/ibm-common-service-operator) installed and it uses its IAM service as namespace provider.
+   If you do not have IBM Common Services installed, edit example/openshift.yaml to update its thanos-proxy-ns-config configmap to use another namespace provider.
+3. Install Grafana into your cluster. You can install it via [IBM Common Service Grafana](https://github.com/IBM/ibm-monitoring-grafana-operator) or the community Grafana operator from OCP OperatorHub.
 4. Configure thanos-proxy as datasource of Grafana
    - click `Add data source button` on grafana's datasources configuration page and select `Promethues` datasource type.
    - Name the datasource name as `thanos`
    - use `http://thanos-proxy:9096` as HTTP URL
-   - add `cfc-access-token-cookie` into Whitelisted Cookies if you are using IBM Bedrock Grafana.
+   - add `cfc-access-token-cookie` into Whitelisted Cookies if you are using IBM Common Service Grafana.
 5. Now you are ready to create Grafana dashboard using thanos as its datasource.
 
 ## Limitations

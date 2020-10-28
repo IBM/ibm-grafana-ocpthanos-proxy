@@ -1,4 +1,4 @@
-type: ibm-bedrock-iam
+type: ibm-cs-iam
 paras:
   # uidURL: https://platform-identity-provider.ibm-common-services.svc:4300
   uidURL: https://cp-console.apps.dybo-ocp44-2.cp.fyre.ibm.com

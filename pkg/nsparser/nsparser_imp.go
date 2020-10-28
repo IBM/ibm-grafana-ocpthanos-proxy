@@ -31,7 +31,7 @@ import (
 /**********************************************
 ***** NSParser implementation: type definitions
 ***********************************************/
-type ibmBedrockNSParser struct {
+type ibmCommonServiceNSParser struct {
 	uidURL      string
 	userInfoURL string
 	client      *http.Client
@@ -52,7 +52,7 @@ func (p *nsListParser) ParseNamespaces(req *http.Request) ([]string, error) {
 }
 
 //ParseNamespaces get the namespaces for the request
-func (p *ibmBedrockNSParser) ParseNamespaces(req *http.Request) ([]string, error) {
+func (p *ibmCommonServiceNSParser) ParseNamespaces(req *http.Request) ([]string, error) {
 	p.init()
 	token, err := p.getToken(req)
 	if err != nil {
@@ -75,7 +75,7 @@ func (p *ibmBedrockNSParser) ParseNamespaces(req *http.Request) ([]string, error
 ***** NSParser implementation: helper methods
 ***********************************************/
 
-func (p *ibmBedrockNSParser) getUserID(token string) (string, error) {
+func (p *ibmCommonServiceNSParser) getUserID(token string) (string, error) {
 	targetURL := p.uidURL + "/v1/auth/userInfo"
 
 	formData := url.Values{"access_token": {token}}
@@ -112,7 +112,7 @@ func (p *ibmBedrockNSParser) getUserID(token string) (string, error) {
 
 	return respObj["sub"].(string), nil
 }
-func (p *ibmBedrockNSParser) queryUserInfo(url string, token string) (string, error) {
+func (p *ibmCommonServiceNSParser) queryUserInfo(url string, token string) (string, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
@@ -132,7 +132,7 @@ func (p *ibmBedrockNSParser) queryUserInfo(url string, token string) (string, er
 	respString := string(respbytes)
 	return strings.Trim(respString, "\""), nil
 }
-func (p *ibmBedrockNSParser) getUserNamespaces(token string, uid string) ([]string, error) {
+func (p *ibmCommonServiceNSParser) getUserNamespaces(token string, uid string) ([]string, error) {
 	//get namespaces accessible to the user
 	nsURL := p.userInfoURL + "/identity/api/v1/users/" + uid + "/getTeamResources" + "?resourceType=namespace"
 	nsRawString, err := p.queryUserInfo(nsURL, token)
@@ -141,7 +141,7 @@ func (p *ibmBedrockNSParser) getUserNamespaces(token string, uid string) ([]stri
 	}
 	var nsObj []map[string]string
 	if err := json.Unmarshal([]byte(nsRawString), &nsObj); err != nil {
-		return []string{}, fmt.Errorf("failed to parse bedrock IAM service response")
+		return []string{}, fmt.Errorf("failed to parse common service IAM service response")
 	}
 	var namespaces []string
 	for _, ns := range nsObj {
@@ -163,7 +163,7 @@ func (p *ibmBedrockNSParser) getUserNamespaces(token string, uid string) ([]stri
 
 }
 
-func (p *ibmBedrockNSParser) getToken(req *http.Request) (string, error) {
+func (p *ibmCommonServiceNSParser) getToken(req *http.Request) (string, error) {
 	cookie, err := req.Cookie("cfc-access-token-cookie")
 	if err == nil {
 		return cookie.Value, err
@@ -179,7 +179,7 @@ func (p *ibmBedrockNSParser) getToken(req *http.Request) (string, error) {
 	return token, nil
 }
 
-func (p *ibmBedrockNSParser) init() {
+func (p *ibmCommonServiceNSParser) init() {
 	if p.client != nil {
 		return
 	}

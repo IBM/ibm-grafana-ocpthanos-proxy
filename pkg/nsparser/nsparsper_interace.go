@@ -27,8 +27,8 @@ import (
 //Type defines type of namespace parser
 type Type string
 
-//NSParserTypeBedrock this namespace parser gets namespaces by querying IBM Bedrock IAM service
-const NSParserTypeBedrock Type = "ibm-bedrock-iam"
+//NSParserTypeCS this namespace parser gets namespaces by querying IBM Common Service IAM service
+const NSParserTypeCS Type = "ibm-cs-iam"
 
 //NSParserTypeNSList use this kind of namespace parser, user can configure namespace list in configuration file
 const NSParserTypeNSList Type = "ns-list"
@@ -47,7 +47,7 @@ type NSParser interface {
 //paras:
 //  pname1: pvalue1
 //  pname2: pvalue2
-//only ibm-bedrock type of parser is implemented for now
+//only ibm-cs type of parser is implemented for now
 func NewNSParser(cfgFile string) NSParser {
 	b, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
@@ -66,17 +66,17 @@ func NewNSParser(cfgFile string) NSParser {
 		return nil
 	}
 	switch Type(ptype.(string)) {
-	case NSParserTypeBedrock:
+	case NSParserTypeCS:
 		paras, ok := cfg["paras"].(map[string]interface{})
 		if !ok {
 			log.Fatalf("something is wrong in namespace parser configuration file: " + cfgFile)
 			return nil
 		}
-		parser := ibmBedrockNSParser{
+		parser := ibmCommonServiceNSParser{
 			uidURL:      paras["uidURL"].(string),
 			userInfoURL: paras["userInfoURL"].(string),
 		}
-		log.Printf("namespace parser created. type: " + string(NSParserTypeBedrock))
+		log.Printf("namespace parser created. type: " + string(NSParserTypeCS))
 		return &parser
 	case NSParserTypeNSList:
 		paras, ok := cfg["paras"].(map[string]interface{})
