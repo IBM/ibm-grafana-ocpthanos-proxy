@@ -21,7 +21,7 @@ BUILD_LOCALLY ?= 1
 # Image URL to use all building/pushing image targets;
 # Use your own docker registry and image name for dev/test by overridding the
 # IMAGE_REPO, IMAGE_NAME and RELEASE_TAG environment variable.
-IMAGE_REPO ?= "quay.io/dybotest"
+IMAGE_REPO ?= "hyc-cloud-private-integration-docker-local.artifactory.swg-devops.com/ibmcom"
 IMAGE_NAME ?= grafana-ocpthanos-proxy
 
 # Github host to use for checking the source tree;
