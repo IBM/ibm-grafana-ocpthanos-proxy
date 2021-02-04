@@ -8,4 +8,5 @@ require (
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
+
 replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
