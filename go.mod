@@ -1,6 +1,6 @@
 module github.com/IBM/ibm-grafana-ocpthanos-proxy
 
-go 1.17.6
+go 1.17
 
 require (
 	github.com/ghodss/yaml v1.0.0
