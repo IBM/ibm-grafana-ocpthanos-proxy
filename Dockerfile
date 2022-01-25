@@ -30,7 +30,8 @@ COPY pkg pkg
 COPY version version
 COPY Makefile Makefile
 
-RUN  make build
+RUN  go mod tidy \
+     && make build
 
 FROM hyc-cloud-private-edge-docker-local.artifactory.swg-devops.com/build-images/ubi8-minimal
 
