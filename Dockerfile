@@ -14,6 +14,24 @@
 #
 
 #Always get the latest
+FROM golang:1.17.6 as builder
+ARG GOARCH
+
+WORKDIR /workspace
+
+
+COPY go.mod go.mod
+COPY go.sum go.sum
+
+COPY cmd cmd
+COPY common common
+COPY example example
+COPY pkg pkg
+COPY version version
+COPY Makefile Makefile
+
+RUN  make build
+
 FROM hyc-cloud-private-edge-docker-local.artifactory.swg-devops.com/build-images/ubi8-minimal
 
 ARG IMAGE_NAME
@@ -42,7 +60,8 @@ LABEL org.label-schema.vendor=$IMAGE_VENDOR \
   maintainer=$IMAGE_MAINTAINER \
   summary=$IMAGE_DESCRIPTION
 
-COPY grafana-ocpthanos-proxy /usr/local/bin/grafana-ocpthanos-proxy
+COPY --from=builder /workspace/grafana-ocpthanos-proxy /usr/local/bin/grafana-ocpthanos-proxy
+# COPY grafana-ocpthanos-proxy /usr/local/bin/grafana-ocpthanos-proxy
 
 # copy licenses
 RUN mkdir /licenses && microdnf update
