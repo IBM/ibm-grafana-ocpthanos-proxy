@@ -1,4 +1,4 @@
-# ibm-grafana-ocpthanos-proxy
+# ibm-grafana-ocpthanos-proxy 
 
 > A simple proxy between Grafana and Openshift Container Platform (OCP) thanos-querier service with multi-tenancy enabled
 
