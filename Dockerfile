@@ -14,7 +14,7 @@
 #
 
 #Always get the latest
-FROM golang:1.18.5 as builder
+FROM golang:1.19.2 as builder
 ARG GOARCH
 
 WORKDIR /workspace
