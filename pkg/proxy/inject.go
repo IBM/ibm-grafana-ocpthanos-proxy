@@ -96,8 +96,8 @@ func setRecursive(node promparser.Node, nsLabelname string, namespaces []string)
 //It limits original query's namespace matcher
 //1. no namespace mather at all
 //2. use Equal matcher
-//3. use MatchRegexp but can only be simple pattern "name1|name2|name3". there should be no any kind of wildcard in names
-//otherwise it will return empty data by injecting noDataMatcher
+//3. use MatchRegexp but can only be simple pattern "name1|name2|name3" or "(name1|name2|name3)" or ".*".
+//   there should not be any kind of wildcard in the names, otherwise it will return empty data by injecting noDataMatcher
 func enforceLabelMatcher(matchers []*promlabels.Matcher, nsLabelname string, namespaces []string) []*promlabels.Matcher {
 	res := []*promlabels.Matcher{}
 	var nsMatcher *promlabels.Matcher
@@ -136,11 +136,23 @@ func enforceLabelMatcher(matchers []*promlabels.Matcher, nsLabelname string, nam
 		}
 
 	}
-	//namespace matcher value in query string is assumed in the format: 'name1|name2|name3'
+	//namespace matcher value in query string is assumed in the format: '.*' or 'name1|name2|name3' or '(name1|name2|name3)'
+	//'.*' will be replaced with namespace matcher, otherwise:
 	//if any one (name1, name2, name3) is not accessible to user, noDataMatcher will be injected
 	if nsMatcher.Type == promlabels.MatchRegexp {
 		allowed := true
-		origNamespaces := strings.Split(nsMatcher.Value, "|")
+		regexp := strings.TrimSuffix(strings.TrimPrefix(nsMatcher.Value, "("), ")")
+		if regexp == ".*" {
+			//create namespace matcher if raw expression tries to match any namespace
+			nsMatcher = &promlabels.Matcher{
+				Type:  promlabels.MatchRegexp,
+				Name:  nsLabelname,
+				Value: generateRegExpr(namespaces),
+			}
+			return append(res, nsMatcher)
+		}
+		//check all namespaces from 'name1|name2|name3' pattern
+		origNamespaces := strings.Split(regexp, "|")
 		for _, ons := range origNamespaces {
 			found := false
 			for _, ns := range namespaces {
