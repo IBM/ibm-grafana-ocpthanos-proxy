@@ -33,7 +33,7 @@ COPY Makefile Makefile
 RUN  go mod tidy \
      && make build
 
-FROM hyc-cloud-private-edge-docker-local.artifactory.swg-devops.com/build-images/ubi8-minimal
+FROM docker-na-public.artifactory.swg-devops.com/hyc-cloud-private-edge-docker-local/build-images/ubi8-minimal
 
 ARG IMAGE_NAME
 ARG IMAGE_DISPLAY_NAME
