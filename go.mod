@@ -13,7 +13,7 @@ require (
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/common v0.9.1 // indirect
-	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
