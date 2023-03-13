@@ -18,3 +18,5 @@ require (
 )
 
 replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20220412211240-33da011f77ad
