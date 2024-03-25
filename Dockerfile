@@ -14,7 +14,7 @@
 #
 
 #Always get the latest
-FROM golang:1.21.6-bullseye as builder
+FROM golang:1.21.8-bullseye as builder
 ARG GOARCH
 
 WORKDIR /workspace
